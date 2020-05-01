@@ -145,7 +145,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     for i in 0..frame_count {
         let output_path = format!("{}/{:04}.png", output_folder, i + 1);
         println!("Displacing frame {} to {}", i, output_path);
-        displace_frame_by_rowcol(&frames, i, &mut output_frame);
+        displace_frame_by_row(&frames, i, &mut output_frame);
         output_frame.save(Path::new(&output_path))?;
     }
 
