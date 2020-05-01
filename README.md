@@ -1,6 +1,8 @@
 # time-displacement-in-rust
 
-Time Displacement in Rust. [Watch this](https://www.youtube.com/watch?v=RCF4DIIuMOk) to understand what is the Time Displacement.
+Time Displacement in Rust.
+
+![](./demo.gif)
 
 ## Quick Start
 
