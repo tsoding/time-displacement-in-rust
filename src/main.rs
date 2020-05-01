@@ -79,12 +79,13 @@ impl Frame {
     }
 }
 
+const DISPLACEMENT_STEP: usize = 1;
+
 // TODO: we need more interesting displacement algorithm
 fn displace_frame_by_row(frames: &[Frame], index: usize, output_frame: &mut Frame) {
     let h = frames[index].info.height as usize;
 
     for row in 0..h {
-        const DISPLACEMENT_STEP: usize = 1;
         let displaced_index = index + row / DISPLACEMENT_STEP;
         if displaced_index < frames.len() {
             output_frame.copy_row(&frames[displaced_index], row);
@@ -96,10 +97,30 @@ fn displace_frame_by_col(frames: &[Frame], index: usize, output_frame: &mut Fram
     let w = frames[index].info.width as usize;
 
     for col in 0..w {
-        const DISPLACEMENT_STEP: usize = 5;
         let displaced_index = index + col / DISPLACEMENT_STEP;
         if displaced_index < frames.len() {
             output_frame.copy_col(&frames[displaced_index], col);
+        }
+    }
+}
+
+fn displace_frame_by_rowcol(frames: &[Frame],
+                            frame_index: usize,
+                            output_frame: &mut Frame) {
+    let w = frames[frame_index].info.width as usize;
+    let h = frames[frame_index].info.height as usize;
+
+    for row in 0..h {
+        for col in 0..w {
+            let displaced_frame_index = (frame_index + (row + col) / DISPLACEMENT_STEP) % frames.len();
+            let dst_pixel_index = output_frame.pixel_index(row, col);
+            let src_pixel_index = frames[displaced_frame_index].pixel_index(row, col);
+            output_frame.pixels[dst_pixel_index + 0] =
+                frames[displaced_frame_index].pixels[src_pixel_index + 0];
+            output_frame.pixels[dst_pixel_index + 1] =
+                frames[displaced_frame_index].pixels[src_pixel_index + 1];
+            output_frame.pixels[dst_pixel_index + 2] =
+                frames[displaced_frame_index].pixels[src_pixel_index + 2];
         }
     }
 }
@@ -124,7 +145,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     for i in 0..frame_count {
         let output_path = format!("{}/{:04}.png", output_folder, i + 1);
         println!("Displacing frame {} to {}", i, output_path);
-        displace_frame_by_col(&frames, i, &mut output_frame);
+        displace_frame_by_rowcol(&frames, i, &mut output_frame);
         output_frame.save(Path::new(&output_path))?;
     }
 
