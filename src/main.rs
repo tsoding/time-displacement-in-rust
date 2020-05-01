@@ -79,7 +79,7 @@ impl Frame {
     }
 }
 
-const DISPLACEMENT_STEP: usize = 1;
+const DISPLACEMENT_STEP: usize = 2;
 
 // TODO: we need more interesting displacement algorithm
 fn displace_frame_by_row(frames: &[Frame], index: usize, output_frame: &mut Frame) {
