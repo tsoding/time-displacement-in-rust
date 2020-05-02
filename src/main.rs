@@ -131,11 +131,10 @@ fn main() -> Result<(), Box<dyn Error>> {
     let frame_count = 300;
     let mut frames = Vec::<Frame>::new();
 
+    println!("Loading frames...");
     for i in 1..=frame_count {
         let input_path = format!("{}/{:04}.png", input_folder, i);
         frames.push(Frame::load(Path::new(&input_path))?);
-        println!("Loading {}", input_path);
-
     }
 
     assert!(frame_count > 0);
@@ -144,10 +143,11 @@ fn main() -> Result<(), Box<dyn Error>> {
     std::fs::create_dir_all(output_folder)?;
     for i in 0..frame_count {
         let output_path = format!("{}/{:04}.png", output_folder, i + 1);
-        println!("Displacing frame {} to {}", i, output_path);
+        print!("\rDisplacing frame {} out of {}", i + 1, frame_count);
         displace_frame_by_row(&frames, i, &mut output_frame);
         output_frame.save(Path::new(&output_path))?;
     }
+    print!("\n");
 
     Ok(())
 }
