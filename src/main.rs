@@ -84,7 +84,6 @@ impl Frame {
 
 const DISPLACEMENT_STEP: usize = 2;
 
-
 struct Movie {
     frames: Vec<Frame>,
     info: OutputInfo,
@@ -123,11 +122,17 @@ impl Movie {
         let h = self.info.height as usize;
 
         for row in 0..h {
-            let displaced_index = index + row / DISPLACEMENT_STEP;
-            // TODO: wrap around?
-            if displaced_index < self.frames.len() {
-                output_frame.copy_row(&self.info, &self.frames[displaced_index], row);
-            }
+            let displaced_index = (index + row / DISPLACEMENT_STEP) % self.frames.len();
+            output_frame.copy_row(&self.info, &self.frames[displaced_index], row);
+        }
+    }
+
+    fn displace_frame_by_row_rev(&self, index: usize, output_frame: &mut Frame) {
+        let h = self.info.height as usize;
+
+        for row in 0..h {
+            let displaced_index = (index + row / DISPLACEMENT_STEP) % self.frames.len();
+            output_frame.copy_row(&self.info, &self.frames[displaced_index], h - row - 1);
         }
     }
 
@@ -135,11 +140,17 @@ impl Movie {
         let w = self.info.width as usize;
 
         for col in 0..w {
-            let displaced_index = index + col / DISPLACEMENT_STEP;
-            // TODO: wrap around?
-            if displaced_index < self.frames.len() {
-                output_frame.copy_col(&self.info, &self.frames[displaced_index], col);
-            }
+            let displaced_index = (index + col / DISPLACEMENT_STEP) % self.frames.len();
+            output_frame.copy_col(&self.info, &self.frames[displaced_index], col);
+        }
+    }
+
+    fn displace_frame_by_col_rev(&self, index: usize, output_frame: &mut Frame) {
+        let w = self.info.width as usize;
+
+        for col in 0..w {
+            let displaced_index = (index + col / DISPLACEMENT_STEP) % self.frames.len();
+            output_frame.copy_col(&self.info, &self.frames[displaced_index], w - col - 1);
         }
     }
 
