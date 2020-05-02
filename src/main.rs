@@ -81,46 +81,63 @@ impl Frame {
 
 const DISPLACEMENT_STEP: usize = 2;
 
-// TODO: we need more interesting displacement algorithm
-fn displace_frame_by_row(frames: &[Frame], index: usize, output_frame: &mut Frame) {
-    let h = frames[index].info.height as usize;
 
-    for row in 0..h {
-        let displaced_index = index + row / DISPLACEMENT_STEP;
-        if displaced_index < frames.len() {
-            output_frame.copy_row(&frames[displaced_index], row);
-        }
-    }
+struct Movie {
+    frames: Vec<Frame>
 }
 
-fn displace_frame_by_col(frames: &[Frame], index: usize, output_frame: &mut Frame) {
-    let w = frames[index].info.width as usize;
+impl Movie {
+    fn load(input_folder: &Path, frame_count: usize) -> Result<Self, Box<dyn Error>> {
+        let mut result = Self {
+            frames: Vec::new()
+        };
 
-    for col in 0..w {
-        let displaced_index = index + col / DISPLACEMENT_STEP;
-        if displaced_index < frames.len() {
-            output_frame.copy_col(&frames[displaced_index], col);
+        for i in 1..=frame_count {
+            result.frames.push(Frame::load(&input_folder.join(format!("{:04}.png", i)))?);
+        }
+
+        Ok(result)
+    }
+
+    // TODO: we need more interesting displacement algorithm
+    fn displace_frame_by_row(&self, index: usize, output_frame: &mut Frame) {
+        let h = self.frames[index].info.height as usize;
+
+        for row in 0..h {
+            let displaced_index = index + row / DISPLACEMENT_STEP;
+            if displaced_index < self.frames.len() {
+                output_frame.copy_row(&self.frames[displaced_index], row);
+            }
         }
     }
-}
 
-fn displace_frame_by_rowcol(frames: &[Frame],
-                            frame_index: usize,
-                            output_frame: &mut Frame) {
-    let w = frames[frame_index].info.width as usize;
-    let h = frames[frame_index].info.height as usize;
+    fn displace_frame_by_col(&self, index: usize, output_frame: &mut Frame) {
+        let w = self.frames[index].info.width as usize;
 
-    for row in 0..h {
         for col in 0..w {
-            let displaced_frame_index = (frame_index + (row + col) / DISPLACEMENT_STEP) % frames.len();
-            let dst_pixel_index = output_frame.pixel_index(row, col);
-            let src_pixel_index = frames[displaced_frame_index].pixel_index(row, col);
-            output_frame.pixels[dst_pixel_index + 0] =
-                frames[displaced_frame_index].pixels[src_pixel_index + 0];
-            output_frame.pixels[dst_pixel_index + 1] =
-                frames[displaced_frame_index].pixels[src_pixel_index + 1];
-            output_frame.pixels[dst_pixel_index + 2] =
-                frames[displaced_frame_index].pixels[src_pixel_index + 2];
+            let displaced_index = index + col / DISPLACEMENT_STEP;
+            if displaced_index < self.frames.len() {
+                output_frame.copy_col(&self.frames[displaced_index], col);
+            }
+        }
+    }
+
+    fn displace_frame_by_rowcol(&self, frame_index: usize, output_frame: &mut Frame) {
+        let w = self.frames[frame_index].info.width as usize;
+        let h = self.frames[frame_index].info.height as usize;
+
+        for row in 0..h {
+            for col in 0..w {
+                let displaced_frame_index = (frame_index + (row + col) / DISPLACEMENT_STEP) % self.frames.len();
+                let dst_pixel_index = output_frame.pixel_index(row, col);
+                let src_pixel_index = self.frames[displaced_frame_index].pixel_index(row, col);
+                output_frame.pixels[dst_pixel_index + 0] =
+                    self.frames[displaced_frame_index].pixels[src_pixel_index + 0];
+                output_frame.pixels[dst_pixel_index + 1] =
+                    self.frames[displaced_frame_index].pixels[src_pixel_index + 1];
+                output_frame.pixels[dst_pixel_index + 2] =
+                    self.frames[displaced_frame_index].pixels[src_pixel_index + 2];
+            }
         }
     }
 }
@@ -129,22 +146,18 @@ fn main() -> Result<(), Box<dyn Error>> {
     let input_folder = "./input";
     let output_folder = "./output";
     let frame_count = 300;
-    let mut frames = Vec::<Frame>::new();
 
     println!("Loading frames...");
-    for i in 1..=frame_count {
-        let input_path = format!("{}/{:04}.png", input_folder, i);
-        frames.push(Frame::load(Path::new(&input_path))?);
-    }
+    let mut movie = Movie::load(&Path::new(input_folder), frame_count)?;
 
     assert!(frame_count > 0);
-    let mut output_frame = Frame::new(&frames[0].info);
+    let mut output_frame = Frame::new(&movie.frames[0].info);
 
     std::fs::create_dir_all(output_folder)?;
     for i in 0..frame_count {
         let output_path = format!("{}/{:04}.png", output_folder, i + 1);
         print!("\rDisplacing frame {} out of {}", i + 1, frame_count);
-        displace_frame_by_row(&frames, i, &mut output_frame);
+        movie.displace_frame_by_row(i, &mut output_frame);
         output_frame.save(Path::new(&output_path))?;
     }
     print!("\n");
