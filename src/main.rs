@@ -88,6 +88,7 @@ struct Movie {
 }
 
 impl Movie {
+    // TODO: Movie::load doesn't tell where exactly things failed
     fn load(input_folder: &str, frame_count: usize) -> Result<Self, Box<dyn Error>> {
         let mut result = {
             assert!(frame_count > 0);
