@@ -4,6 +4,8 @@ Time Displacement in Rust.
 
 ![](./demo.gif)
 
+This project was implemented on a Twitch Stream. Recording is available here: https://www.twitch.tv/videos/610774091
+
 ## Quick Start
 
 ```c
